@@ -185,7 +185,8 @@ parallel::stopCluster(init_cluster)
 samples_matrix <- readRDS("disc_grad/example_scripts/section_6/bayesian_neural_network/bayesian_neural_network_with_constrained_outer_weights_store_samples.RDS")
 
 posterior_samples_sigma <- exp(samples_matrix[, 1] * 0.5)
-plot(posterior_samples_sigma, col = samples_matrix[, 11], ylab = expression(sigma), main = expression(paste("Posterior samples of ", sigma)))
+# plot(posterior_samples_sigma, col = samples_matrix[, 11], ylab = expression(sigma), main = expression(paste("Posterior samples of ", sigma)))
+plot(posterior_samples_sigma[seq(from = 50, to = n_samples_per_iteration * n_iterations, by = 50)], col = samples_matrix[seq(from = 50, to = n_samples_per_iteration * n_iterations, by = 50), 11], ylab = expression(sigma), main = expression(paste("Posterior samples of ", sigma)), xlab = "Sample number", pch = 19, cex = 0.1)
 
 mean(posterior_samples_sigma)
 sd(posterior_samples_sigma)
