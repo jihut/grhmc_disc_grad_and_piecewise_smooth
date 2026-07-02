@@ -460,7 +460,9 @@ grhmc_piecewise_smooth_density_transformed_function <- function(
     last.root.offset.lin.root.finder = last.root.offset.lin.root.finder,
     last.root.offset.non.lin.root.finder = last.root.offset.non.lin.root.finder,
     precision_real_root_lin_root_finder = precision_real_root_lin_root_finder,
-    num_subdiv_non_lin_root_finder = num_subdiv_non_lin_root_finder
+    num_subdiv_non_lin_root_finder = num_subdiv_non_lin_root_finder,
+    rtol = rtol,
+    atol = atol
   )
   
   df_sim_out <- sim_out$samples

@@ -482,7 +482,9 @@ VARI_adaptive_step_grhmc_discontinuous_gradient_transformed_function <- function
     last.root.offset.non.lin.root.finder = last.root.offset.non.lin.root.finder,
     precision_real_root_lin_root_finder = precision_real_root_lin_root_finder,
     num_subdiv_non_lin_root_finder = num_subdiv_non_lin_root_finder,
-    h.max = h_max
+    h.max = h_max,
+    rtol = rtol, 
+    atol = atol
   )
   
   df_sim_out <- sim_out$samples

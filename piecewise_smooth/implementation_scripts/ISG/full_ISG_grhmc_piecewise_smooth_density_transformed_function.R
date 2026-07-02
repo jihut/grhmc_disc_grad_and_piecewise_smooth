@@ -1,7 +1,7 @@
-source("disc_grad/implementation_scripts/general_scripts/grhmc_discontinuous_gradient_transformed_function.R")
-source("disc_grad/implementation_scripts/ISG/ISG_adaptive_step_grhmc_discontinuous_gradient_transformed_function.R")
+source("piecewise_smooth/implementation_scripts/ISG/ISG_adaptive_step_grhmc_piecewise_smooth_density_transformed_function.R")
+source("piecewise_smooth/implementation_scripts/general_scripts/grhmc_piecewise_smooth_density_transformed_function.R")
 
-ISG_grhmc_discontinuous_gradient_transformed_function <- function(
+ISG_grhmc_piecewise_smooth_density_transformed_function <- function(
     model_list, 
     lambda_initial, 
     lambda_lower_limit = 0.01, 
@@ -20,10 +20,12 @@ ISG_grhmc_discontinuous_gradient_transformed_function <- function(
     proportion_time_until_adaptive_start = 0.05,
     min_proportion_of_previous_state = 0.5,
     max_proportion_of_previous_state = 2,
+    sampling_compute_temporal_averages_of_moments = FALSE, 
+    reflection_type = NULL,
     verbose_at_refresh = FALSE,
-    last.root.offset.lin.root.finder = 1.0e-8,
-    last.root.offset.non.lin.root.finder = 1.0e-8,
-    precision_real_root_lin_root_finder = 1.0e-13,
+    last.root.offset.lin.root.finder = 1e-10,
+    last.root.offset.non.lin.root.finder = 1e-10,
+    precision_real_root_lin_root_finder = 1e-13,
     num_subdiv_non_lin_root_finder = 8L
 ) {
   
@@ -33,7 +35,9 @@ ISG_grhmc_discontinuous_gradient_transformed_function <- function(
   
   print("Running adaptive step")
   
-  adaptive_step_run <- ISG_adaptive_step_grhmc_discontinuous_gradient_transformed_function(
+  time_period_adaptive <<- time_period_adaptive
+  
+  adaptive_step_run <- ISG_adaptive_step_grhmc_piecewise_smooth_density_transformed_function(
     model_list = model_list, 
     lambda = lambda_initial,
     lambda_lower_limit = lambda_lower_limit,
@@ -49,6 +53,7 @@ ISG_grhmc_discontinuous_gradient_transformed_function <- function(
     proportion_time_until_adaptive_start = proportion_time_until_adaptive_start,
     min_proportion_of_previous_state = min_proportion_of_previous_state,
     max_proportion_of_previous_state = max_proportion_of_previous_state,
+    reflection_type = reflection_type,
     verbose_at_refresh = verbose_at_refresh,
     last.root.offset.lin.root.finder = last.root.offset.lin.root.finder,
     last.root.offset.non.lin.root.finder = last.root.offset.non.lin.root.finder,
@@ -58,7 +63,7 @@ ISG_grhmc_discontinuous_gradient_transformed_function <- function(
   
   print("Running sample step")
   
-  sample_step_run <- grhmc_discontinuous_gradient_transformed_function(
+  sample_step_run <- grhmc_piecewise_smooth_density_transformed_function(
     model_list = model_list,
     lambda = adaptive_step_run$lambda_adaptive,
     T = time_period_generating_samples,
@@ -72,7 +77,9 @@ ISG_grhmc_discontinuous_gradient_transformed_function <- function(
     rtol = rtol,
     atol = atol,
     h_max = h_max,
-    verbose_at_refresh = verbose_at_refresh,
+    sampling_compute_temporal_averages_of_moments = sampling_compute_temporal_averages_of_moments,
+    reflection_type = reflection_type,
+    verbose_at_refresh = verbose_at_refresh,    
     last.root.offset.lin.root.finder = last.root.offset.lin.root.finder,
     last.root.offset.non.lin.root.finder = last.root.offset.non.lin.root.finder,
     precision_real_root_lin_root_finder = precision_real_root_lin_root_finder,
