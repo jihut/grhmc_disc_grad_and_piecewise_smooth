@@ -29,7 +29,7 @@ Boston_scale <- data.frame(scale_x, medv = scale_y)
 
 # Stan
 
-stan_run <- readRDS("disc_grad/example_scripts/section_6/regularized_linear_regression/stan_identity_run_example.RDS")
+stan_run <- readRDS("disc_grad/example_scripts/regularized_linear_regression/stan_identity_run_example.RDS")
 stan_samples <- rstan::extract(stan_run, permute = FALSE)
 original_scale_stan_array <- array(dim = c(dim(stan_samples)[1:2], length_beta + 1))
 
@@ -67,7 +67,7 @@ round(sapply(1:length_beta, function(i) mean(original_scale_stan_matrix[, i + 1]
 
 # GRHMC 
 
-grhmc_disc_grad_run <- readRDS("disc_grad/example_scripts/section_6/regularized_linear_regression/disc_grad_run_identity_with_n_evals_ode_run_example.RDS")
+grhmc_disc_grad_run <- readRDS("disc_grad/example_scripts/regularized_linear_regression/disc_grad_run_identity_with_n_evals_ode_run_example.RDS")
 
 original_scale_grhmc_disc_grad_array <- array(dim = c(n_samples_per_iteration_grhmc, n_iterations, length_beta + 1))
 

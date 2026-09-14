@@ -139,6 +139,7 @@ init_cluster <- parallel::makeCluster(10)
 doParallel::registerDoParallel(init_cluster)
 
 final_run <- foreach::foreach(l = 1:10) %dopar% {
+  dir.create("piecewise_smooth/example_scripts/switching_volatility/real_data/log", showWarnings = F)
   sink(paste0("piecewise_smooth/example_scripts/switching_volatility/real_data/log/log_nr", l, ".txt"))
   y_vec <- data$V1
   
@@ -497,6 +498,7 @@ final_run <- foreach::foreach(l = 1:10) %dopar% {
 }
 
 saveRDS(final_run, "piecewise_smooth/example_scripts/switching_volatility/real_data/real_data_switching_volatility_with_constraint_reflective_hmc.RDS")
+# final_run <- readRDS("piecewise_smooth/example_scripts/switching_volatility/real_data/real_data_switching_volatility_with_constraint_reflective_hmc.RDS")
 
 parallel::stopCluster(init_cluster)
 

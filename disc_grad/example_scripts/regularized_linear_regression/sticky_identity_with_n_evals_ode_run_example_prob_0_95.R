@@ -15,8 +15,8 @@ source("sticky/implementation_scripts/general_scripts/grhmc_sticky_transformed_f
 
 n_cores <- 10
 n_iterations <- 10
-n_samples_per_iteration <- 10000
-time_period <- 10000
+n_samples_per_iteration <- 1000000
+time_period <- 50000
 
 head(Boston)
 
@@ -121,30 +121,39 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
   
 }
 
-# saveRDS(samples_matrix, "disc_grad/example_scripts/section_6/regularized_linear_regression/samples_sticky_run_example.RDS")
-samples_matrix <- readRDS("disc_grad/example_scripts/section_6/regularized_linear_regression/samples_sticky_run_example.RDS")
+parallel::stopCluster(init_cluster)
 
-boston_scale_grhmc_beta_store_matrix <- samples_matrix[, 1:length_beta]
+# saveRDS(store_runs, "disc_grad/example_scripts/regularized_linear_regression/sticky_run_identity_with_n_evals_ode_run_example.RDS")
+store_runs <- readRDS("disc_grad/example_scripts/regularized_linear_regression/sticky_run_identity_with_n_evals_ode_run_example.RDS")
 
-boston_grhmc_original_scale_beta_matrix <- t(t(boston_scale_grhmc_beta_store_matrix) / apply(x, 2, sd)) * sd(y) # convert back to original scale
+for (i in 1:n_iterations) {
+  if (i == 1) {
+    samples_matrix <- store_runs[[1]]$q_original_samples
+  } else {
+    samples_matrix <- rbind(samples_matrix, store_runs[[i]]$q_original_samples)
+  }
+}
 
-boston_grhmc_ratio_samples_zero <- sapply(1:ncol(boston_grhmc_original_scale_beta_matrix), function(i) mean(boston_grhmc_original_scale_beta_matrix[, i] == 0)) # posterior probability of beta equal to zero
+boston_scale_sticky_beta_store_matrix <- samples_matrix[, 1:length_beta]
 
-boston_grhmc_original_scale_beta_cred_int <- matrix(nrow = ncol(boston_grhmc_original_scale_beta_matrix), ncol = 2)
-colnames(boston_grhmc_original_scale_beta_cred_int) <- c("lower", "upper")
+boston_sticky_original_scale_beta_matrix <- t(t(boston_scale_sticky_beta_store_matrix) / apply(x, 2, sd)) * sd(y) # convert back to original scale
 
-for (j in 1:ncol(boston_grhmc_original_scale_beta_matrix)) {
+boston_sticky_ratio_samples_zero <- sapply(1:ncol(boston_sticky_original_scale_beta_matrix), function(i) mean(boston_sticky_original_scale_beta_matrix[, i] == 0)) # posterior probability of beta equal to zero
+
+boston_sticky_original_scale_beta_cred_int <- matrix(nrow = ncol(boston_sticky_original_scale_beta_matrix), ncol = 2)
+colnames(boston_sticky_original_scale_beta_cred_int) <- c("lower", "upper")
+
+for (j in 1:ncol(boston_sticky_original_scale_beta_matrix)) {
   
-  boston_grhmc_original_scale_beta_cred_int[j, ] <- quantile(boston_grhmc_original_scale_beta_matrix[, j], probs = c(0.025, 0.975))
+  boston_sticky_original_scale_beta_cred_int[j, ] <- quantile(boston_sticky_original_scale_beta_matrix[, j], probs = c(0.025, 0.975))
   
 }
 
-final_boston_grhmc_original_scale_beta_cred_int <- data.frame(
-  boston_grhmc_original_scale_beta_cred_int, 
-  posterior_median = apply(boston_grhmc_original_scale_beta_matrix, 2, median),
+final_boston_sticky_original_scale_beta_cred_int <- data.frame(
+  boston_sticky_original_scale_beta_cred_int, 
+  posterior_median = apply(boston_sticky_original_scale_beta_matrix, 2, median),
   variable = colnames(x),
   prior_prob = 0.95,
-  ratio_samples_equal_zero = boston_grhmc_ratio_samples_zero
+  ratio_samples_equal_zero = boston_sticky_ratio_samples_zero
 )
 
-parallel::stopCluster(init_cluster)

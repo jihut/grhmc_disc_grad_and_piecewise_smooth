@@ -38,7 +38,7 @@ init_cluster <- parallel::makeCluster(5)
 doParallel::registerDoParallel(init_cluster)
 
 store_matrix <- foreach::foreach(l = 1:10, .combine = "rbind") %dopar% {
-  # sink(paste0("piecewise_smooth/example_scripts/section_6/simulated_data/log/log_nr", l, ".txt"))
+  # sink(paste0("piecewise_smooth/example_scripts/simulated_data/log/log_nr", l, ".txt"))
 
   num_time_points <- length(y_vec)
   
@@ -353,8 +353,8 @@ store_matrix <- foreach::foreach(l = 1:10, .combine = "rbind") %dopar% {
   
 }
 parallel::stopCluster(init_cluster)
-# saveRDS(store_matrix, "piecewise_smooth/example_scripts/section_6/simulated_data_switching_volatility_non_adaptive_deterministic_samples.RDS")
-store_matrix <- readRDS("piecewise_smooth/example_scripts/section_6/simulated_data/simulated_data_switching_volatility_non_adaptive_deterministic_samples.RDS")
+# saveRDS(store_matrix, "piecewise_smooth/example_scripts/simulated_data_switching_volatility_non_adaptive_deterministic_samples.RDS")
+store_matrix <- readRDS("piecewise_smooth/example_scripts/simulated_data/simulated_data_switching_volatility_non_adaptive_deterministic_samples.RDS")
 
 store_matrix <- cbind(store_matrix, rep(1:100000, 10))
 store_matrix <- store_matrix[store_matrix[, ncol(store_matrix)] > 50000, ] # remove first half as burn in samples

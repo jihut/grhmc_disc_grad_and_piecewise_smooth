@@ -21,6 +21,7 @@ doParallel::registerDoParallel(init_cluster)
 # First: 5 independent trajectories where z_initial is from a normal distribution with mean -1
 
 final_run <- foreach::foreach(l = 1:10) %dopar% {
+  dir.create("piecewise_smooth/example_scripts/switching_volatility/real_data/log")
   sink(paste0("piecewise_smooth/example_scripts/switching_volatility/real_data/log/log_nr", l, ".txt"))
   y_vec <- data$V1
   
@@ -390,6 +391,7 @@ final_run <- foreach::foreach(l = 1:10) %dopar% {
   
 }
 saveRDS(final_run, "piecewise_smooth/example_scripts/switching_volatility/real_data/real_data_switching_volatility_non_adaptive_deterministic_samples_t_250000.RDS")
+# final_run <- readRDS("piecewise_smooth/example_scripts/switching_volatility/real_data/real_data_switching_volatility_non_adaptive_deterministic_samples_t_250000.RDS")
 
 parallel::stopCluster(init_cluster)
 

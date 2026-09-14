@@ -85,7 +85,7 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
   
   og_regmod <- lm(medv ~ ., data = Boston_scale)
   
-  # sink(paste0("disc_grad/example_scripts/section_6/regularized_linear_regression/log_folder/log_nr", l, ".txt"))
+  # sink(paste0("disc_grad/example_scripts/regularized_linear_regression/log_folder/log_nr", l, ".txt"))
   
   print("Start run")
   
@@ -211,8 +211,8 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
   
 }
 
-# saveRDS(samples_matrix, "disc_grad/example_scripts/section_6/regularized_linear_regression/samples_disc_grad_run_example.RDS")
-samples_matrix <- readRDS("disc_grad/example_scripts/section_6/regularized_linear_regression/samples_disc_grad_run_example.RDS")
+# saveRDS(samples_matrix, "disc_grad/example_scripts/regularized_linear_regression/samples_disc_grad_run_example.RDS")
+samples_matrix <- readRDS("disc_grad/example_scripts/regularized_linear_regression/samples_disc_grad_run_example.RDS")
 
 boston_scale_grhmc_beta_store_matrix <- matrix(0, nrow = n_samples_per_iteration * n_iterations, ncol = length_beta) # store the scaled beta samples 
 

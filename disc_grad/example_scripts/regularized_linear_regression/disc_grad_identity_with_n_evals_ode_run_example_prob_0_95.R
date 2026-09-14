@@ -84,8 +84,8 @@ doRNG::registerDoRNG(seed = 42)
 grhmc_disc_grad_run <- foreach::foreach(l = 1:n_iterations) %dopar% {
   
   og_regmod <- lm(medv ~ ., data = Boston_scale)
-  
-  sink(paste0("disc_grad/example_scripts/section_6/regularized_linear_regression/log_folder/log_nr", l, ".txt"))
+  dir.create("disc_grad/example_scripts/regularized_linear_regression/log_folder", showWarnings = FALSE)
+  sink(paste0("disc_grad/example_scripts/regularized_linear_regression/log_folder/log_nr", l, ".txt"))
   
   print("Start run")
   
@@ -244,8 +244,8 @@ grhmc_disc_grad_run <- foreach::foreach(l = 1:n_iterations) %dopar% {
 
 parallel::stopCluster(init_cluster)
 
-saveRDS(grhmc_disc_grad_run, "disc_grad/example_scripts/section_6/regularized_linear_regression/disc_grad_run_identity_with_n_evals_ode_run_example.RDS")
-# grhmc_disc_grad_run <- readRDS("disc_grad/example_scripts/section_6/regularized_linear_regression/disc_grad_run_identity_with_n_evals_ode_run_example.RDS")
+saveRDS(grhmc_disc_grad_run, "disc_grad/example_scripts/regularized_linear_regression/disc_grad_run_identity_with_n_evals_ode_run_example.RDS")
+# grhmc_disc_grad_run <- readRDS("disc_grad/example_scripts/regularized_linear_regression/disc_grad_run_identity_with_n_evals_ode_run_example.RDS")
 
 for (i in 1:n_iterations) {
   if (i == 1) {

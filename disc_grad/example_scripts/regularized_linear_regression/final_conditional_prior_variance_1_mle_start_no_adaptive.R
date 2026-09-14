@@ -91,7 +91,7 @@ system.time(
       
       og_regmod <- lm(medv ~ ., data = Boston_scale)
       
-      # sink(paste0("disc_grad/example_scripts/section_6/regularized_linear_regression/log_folder/log_nr", l, ".txt"))
+      # sink(paste0("disc_grad/example_scripts/regularized_linear_regression/log_folder/log_nr", l, ".txt"))
       
       print("Start run")
       
@@ -262,8 +262,8 @@ system.time(
   
 )
 
-# store_matrix <- saveRDS(store_matrix, "disc_grad/example_scripts/section_6/regularized_linear_regression/final_store_matrix_conditional_prior_variance_1_mle_start_no_adaptive.RDS")
-store_matrix <- readRDS("disc_grad/example_scripts/section_6/regularized_linear_regression/final_store_matrix_conditional_prior_variance_1_mle_start_no_adaptive.RDS")
+# store_matrix <- saveRDS(store_matrix, "disc_grad/example_scripts/regularized_linear_regression/final_store_matrix_conditional_prior_variance_1_mle_start_no_adaptive.RDS")
+store_matrix <- readRDS("disc_grad/example_scripts/regularized_linear_regression/final_store_matrix_conditional_prior_variance_1_mle_start_no_adaptive.RDS")
 
 store_matrix
 

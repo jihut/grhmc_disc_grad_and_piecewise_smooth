@@ -15,11 +15,13 @@ grhmc_discontinuous_gradient_transformed_function <- function(
     rtol = NULL,
     atol = NULL,
     h_max = 1.0,
+    sampling_compute_temporal_averages_of_moments = FALSE,
     last.root.offset.lin.root.finder = 1.0e-8,
     last.root.offset.non.lin.root.finder = 1.0e-8,
     precision_real_root_lin_root_finder = 1.0e-13,
     num_subdiv_non_lin_root_finder = 8L,
-    verbose_at_refresh = FALSE
+    verbose_at_refresh = FALSE,
+    return_output_from_ode = TRUE
 ) {
   
   if(!is.null(random_state)){
@@ -36,6 +38,7 @@ grhmc_discontinuous_gradient_transformed_function <- function(
   
   d <- length(qbar_initial)
   model_list$grad_jump_fun(m_initial + diag_s_elements_initial * qbar_initial)
+  sampling_compute_temporal_averages_of_moments <<- sampling_compute_temporal_averages_of_moments
   
   # transposed_model_list_linear_constrained_A <- t(model_list$region_lin_root_list$A) # New addition: Use sparse matrix as a linear equation defining the boundary of change in gradient tends to concern only a certain amount of coordinates
   if (!is.null(model_list$region_lin_root_list)) {
@@ -59,25 +62,49 @@ grhmc_discontinuous_gradient_transformed_function <- function(
   # state[(4 + 5*n_dim):(4 + 6*n_dim - 1)]: \int q^2 dt = \int (m + Sqbar)^2 dt
   # state[4 + 6*n_dim]: region id
   
-  ode <- function(t, state, parms){
+  if (sampling_compute_temporal_averages_of_moments) {
     
-    count_n_evals_ode()
-    
-    ret <- c(
+    ode <- function(t, state, parms){
       
-      0, # number of momentum refresh events
-      lambda, # integrate lambda to get Lambda
-      0, # u
-      state[(4 + d):(4 + 2 * d - 1)], # \dot qbar = pbar
-      diag_s_elements_initial *
-        model_list$log_target_grad(m_initial + diag_s_elements_initial * state[4:(4 + d - 1)]), #\dot pbar = gradient of log transformed density wrt. qbar
-      state[4:(4 + d - 1)], # \int qbar dt
-      state[4:(4 + d - 1)] ^ 2, # \int qbar^2 dt
-      m_initial + diag_s_elements_initial * state[4:(4 + d - 1)], # \int q dt = \int m + Sqbar dt
-      (m_initial + diag_s_elements_initial * state[4:(4 + d - 1)]) ^ 2 # \int q^2 dt = \int (m + Sqbar) dt
-    )
+      count_n_evals_ode()
+      
+      ret <- c(
+        
+        0, # number of momentum refresh events
+        lambda, # integrate lambda to get Lambda
+        0, # u
+        state[(4 + d):(4 + 2 * d - 1)], # \dot qbar = pbar
+        diag_s_elements_initial *
+          model_list$log_target_grad(m_initial + diag_s_elements_initial * state[4:(4 + d - 1)]), #\dot pbar = gradient of log transformed density wrt. qbar
+        state[4:(4 + d - 1)], # \int qbar dt
+        state[4:(4 + d - 1)] ^ 2, # \int qbar^2 dt
+        m_initial + diag_s_elements_initial * state[4:(4 + d - 1)], # \int q dt = \int m + Sqbar dt
+        (m_initial + diag_s_elements_initial * state[4:(4 + d - 1)]) ^ 2 # \int q^2 dt = \int (m + Sqbar) dt
+      )
+      
+      ret
+      
+    }
     
-    ret
+  } else {
+    
+    ode <- function(t, state, parms){
+      
+      count_n_evals_ode()
+      
+      ret <- c(
+        
+        0, # number of momentum refresh events
+        lambda, # integrate lambda to get Lambda
+        0, # u
+        state[(4 + d):(4 + 2 * d - 1)], # \dot qbar = pbar
+        diag_s_elements_initial *
+          model_list$log_target_grad(m_initial + diag_s_elements_initial * state[4:(4 + d - 1)]) #\dot pbar = gradient of log transformed density wrt. qbar
+      )
+      
+      ret
+      
+    }
     
   }
   
@@ -200,14 +227,28 @@ grhmc_discontinuous_gradient_transformed_function <- function(
       # new.state[3] <- rexp(1)
       # new.state[(4 + d):(4 + 2 * d - 1)] <- rnorm(d)
       
-      new.state <- c(
-        y[1] + 1,
-        0,
-        rexp(1),
-        y[4:(4 + d - 1)],
-        rnorm(d),
-        y[(4 + 2 * d):(4 + 6 * d - 1)]
-      )
+      if (sampling_compute_temporal_averages_of_moments) {
+        
+        new.state <- c(
+          y[1] + 1,
+          0,
+          rexp(1),
+          y[4:(4 + d - 1)],
+          rnorm(d),
+          y[(4 + 2 * d):(4 + 6 * d - 1)]
+        )
+        
+      } else {
+        
+        new.state <- c(
+          y[1] + 1,
+          0,
+          rexp(1),
+          y[4:(4 + d - 1)],
+          rnorm(d)
+        )
+        
+      }
       
     } else if (whichroot > 1 & whichroot <= (num_of_lin_constraints + 1)) { # due to crossing boundary of discontinuous gradient
       
@@ -219,7 +260,16 @@ grhmc_discontinuous_gradient_transformed_function <- function(
       # q and p unchanged, only id is updated
       # new.state <- y
       # new.state[4 + 6 * d] <- new_region_id
-      new.state <- c(y[1:3], qbar, pbar, y[(4 + 2 * d):(4 + 6 * d - 1)])
+      
+      if (sampling_compute_temporal_averages_of_moments) {
+        
+        new.state <- c(y[1:3], qbar, pbar, y[(4 + 2 * d):(4 + 6 * d - 1)])
+        
+      } else {
+        
+        new.state <- c(y[1:3], qbar, pbar)
+        
+      }
       
     } else { # due to the additional linear root functions that are given
       
@@ -232,17 +282,31 @@ grhmc_discontinuous_gradient_transformed_function <- function(
   }
   
   
-  y0 <- c(
-    0,
-    Lambda_initial,
-    u_initial,
-    qbar_initial,
-    pbar_initial,
-    rep(0, d),
-    rep(0, d),
-    rep(0, d),
-    rep(0, d)
-  )
+  if (sampling_compute_temporal_averages_of_moments) {
+    
+    y0 <- c(
+      0,
+      Lambda_initial,
+      u_initial,
+      qbar_initial,
+      pbar_initial,
+      rep(0, d),
+      rep(0, d),
+      rep(0, d),
+      rep(0, d)
+    )
+    
+  } else {
+    
+    y0 <- c(
+      0,
+      Lambda_initial,
+      u_initial,
+      qbar_initial,
+      pbar_initial
+    )
+    
+  }
   
   if(is.null(rtol)){
     rtol <- 1e-4 # default in deSolve::lsodar
@@ -280,33 +344,64 @@ grhmc_discontinuous_gradient_transformed_function <- function(
   )
   
   df_sim_out <- sim_out$samples
-  colnames(df_sim_out) <- c(
-    "time",
-    "number_of_events",
-    "Lambda",
-    "u",
-    paste0("qbar", 1:d),
-    paste0("pbar", 1:d),
-    paste0("int_qbar", 1:d),
-    paste0("int_qbar", 1:d, "_squared"),
-    paste0("int_q", 1:d),
-    paste0("int_q", 1:d, "_squared")
-  )
+  
+  if (sampling_compute_temporal_averages_of_moments) {
+    
+    colnames(df_sim_out) <- c(
+      "time",
+      "number_of_events",
+      "Lambda",
+      "u",
+      paste0("qbar", 1:d),
+      paste0("pbar", 1:d),
+      paste0("int_qbar", 1:d),
+      paste0("int_qbar", 1:d, "_squared"),
+      paste0("int_q", 1:d),
+      paste0("int_q", 1:d, "_squared")
+    )
+    
+  } else {
+    
+    colnames(df_sim_out) <- c(
+      "time",
+      "number_of_events",
+      "Lambda",
+      "u",
+      paste0("qbar", 1:d),
+      paste0("pbar", 1:d)
+    )
+    
+  }
   
   q_original_samples <- t(m_initial + diag(diag_s_elements_initial, nrow = d) %*% t(df_sim_out[, 4:(4 + d - 1) + 1]))[-1, ]
   
-  return(
-    list(
-      q_original_samples = q_original_samples,
-      output_from_ode_solver = df_sim_out,
-      n_evals_ode = n_evals_ode,
-      s_elements = diag_s_elements_initial,
-      m_elements = m_initial,
-      lambda = lambda,
-      random_state = random_state,
-      rtol = rtol, 
-      atol = atol
+  if (return_output_from_ode) {
+    return(
+      list(
+        q_original_samples = q_original_samples,
+        output_from_ode_solver = df_sim_out,
+        n_evals_ode = n_evals_ode,
+        s_elements = diag_s_elements_initial,
+        m_elements = m_initial,
+        lambda = lambda,
+        random_state = random_state,
+        rtol = rtol, 
+        atol = atol
+      )
+    ) 
+  } else {
+    return(
+      list(
+        q_original_samples = q_original_samples,
+        n_evals_ode = n_evals_ode,
+        s_elements = diag_s_elements_initial,
+        m_elements = m_initial,
+        lambda = lambda,
+        random_state = random_state,
+        rtol = rtol, 
+        atol = atol
+      )
     )
-  )
+  }
   
 }

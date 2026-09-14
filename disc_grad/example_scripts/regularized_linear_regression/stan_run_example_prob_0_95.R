@@ -132,8 +132,8 @@ stan_run <- rstan::stan(
   seed = 42 # currently 42, try 420
 )
 
-# readRDS(stan_run, "disc_grad/example_scripts/section_6/regularized_linear_regression/stan_run_example.RDS")
-stan_run <- readRDS("disc_grad/example_scripts/section_6/regularized_linear_regression/stan_run_example.RDS")
+# readRDS(stan_run, "disc_grad/example_scripts/regularized_linear_regression/stan_run_example.RDS")
+stan_run <- readRDS("disc_grad/example_scripts/regularized_linear_regression/stan_run_example.RDS")
 
 stan_samples <- rstan::extract(stan_run)
 

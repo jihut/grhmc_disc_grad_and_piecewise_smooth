@@ -22,8 +22,8 @@ scale_x <- scale(x)
 scale_y <- scale(y)
 mean_y <- mean(y)
 
-disc_grad_samples <- readRDS("disc_grad/example_scripts/section_6/regularized_linear_regression/samples_disc_grad_run_example.RDS")
-sticky_samples <- readRDS("disc_grad/example_scripts/section_6/regularized_linear_regression/samples_sticky_run_example.RDS")
+disc_grad_samples <- readRDS("disc_grad/example_scripts/regularized_linear_regression/samples_disc_grad_run_example.RDS")
+sticky_samples <- readRDS("disc_grad/example_scripts/regularized_linear_regression/samples_sticky_run_example.RDS")
 
 # Discontinuous gradient setup
 

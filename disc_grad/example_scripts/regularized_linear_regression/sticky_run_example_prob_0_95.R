@@ -41,7 +41,7 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
   
   og_regmod <- lm(medv ~ ., data = Boston_scale)
   
-  # sink(paste0("disc_grad/example_scripts/section_6/regularized_linear_regression/sticky_log/log_nr", l, ".txt"))
+  # sink(paste0("disc_grad/example_scripts/regularized_linear_regression/sticky_log/log_nr", l, ".txt"))
   
   print("Start run")
   
@@ -121,8 +121,8 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
   
 }
 
-# saveRDS(samples_matrix, "disc_grad/example_scripts/section_6/regularized_linear_regression/samples_sticky_run_example.RDS")
-samples_matrix <- readRDS("disc_grad/example_scripts/section_6/regularized_linear_regression/samples_sticky_run_example.RDS")
+# saveRDS(samples_matrix, "disc_grad/example_scripts/regularized_linear_regression/samples_sticky_run_example.RDS")
+samples_matrix <- readRDS("disc_grad/example_scripts/regularized_linear_regression/samples_sticky_run_example.RDS")
 
 boston_scale_grhmc_beta_store_matrix <- samples_matrix[, 1:length_beta]
 
