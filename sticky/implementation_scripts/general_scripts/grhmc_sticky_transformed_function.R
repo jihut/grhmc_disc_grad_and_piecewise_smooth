@@ -196,6 +196,8 @@ grhmc_sticky_transformed_function <- function(
     func = ode,
     root.func = NULL,
     event.func = NULL,
+    rtol = rtol,
+    atol = atol,
     lin.root.func = region_lin_root_fun,
     lin.root.event.func = region_lin_event_fun,
     last.root.offset.lin.root.finder = last.root.offset.lin.root.finder,

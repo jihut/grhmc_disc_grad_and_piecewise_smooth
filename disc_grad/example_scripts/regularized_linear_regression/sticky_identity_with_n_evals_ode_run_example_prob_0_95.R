@@ -67,7 +67,7 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
   prior_prob_zero <- 0.95
   prior_var_slab <- 1
   grhmc_model_list$weight_slab <- rep(1 - prior_prob_zero, (grhmc_model_list$n_parameters) - 1) # 95% prior probability of beta_i = 0
-  grhmc_model_list$sigma_slab <- rep(prior_prob_zero, grhmc_model_list$n_parameters - 1)
+  grhmc_model_list$sigma_slab <- rep(sqrt(prior_var_slab), grhmc_model_list$n_parameters - 1)
   
   grhmc_model_list$log_target_grad <- function(q) { # new version, vectorized and therefore slightly faster
     
@@ -93,7 +93,7 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
   
   boston_scale_fit_grhmc <- grhmc_sticky_transformed_function(
     model_list = grhmc_model_list,
-    lambda = 0.2,
+    lambda = 2.5,
     T = time_period,
     n_samples = n_samples_per_iteration,
     diag_s_elements_initial = rep(1, grhmc_model_list$n_parameters),
@@ -103,8 +103,8 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
     Lambda_initial = 0,
     u_initial = rexp(1),
     random_state = NULL,
-    rtol = NULL,
-    atol = NULL,
+    rtol = 1e-4,
+    atol = 1e-4,
     h_max = 1.0,
     last.root.offset.lin.root.finder = 1.0e-8,
     last.root.offset.non.lin.root.finder = 1.0e-8,

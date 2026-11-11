@@ -4,7 +4,7 @@
 rm(list = ls())
 
 library(MASS)
-library(brms)
+# library(brms)
 library(ggplot2)
 library(dplyr)
 library(rstan)
@@ -15,8 +15,8 @@ source("sticky/implementation_scripts/general_scripts/grhmc_sticky_transformed_f
 
 n_cores <- 10
 n_iterations <- 10
-n_samples_per_iteration <- 10000
-time_period <- 10000
+n_samples_per_iteration <- 1000000
+time_period <- 50000
 
 head(Boston)
 
@@ -37,11 +37,11 @@ doParallel::registerDoParallel(init_cluster)
 
 doRNG::registerDoRNG(seed = 42)
 
-samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopar% {
+store_runs <- foreach::foreach(l = 1:n_iterations) %dopar% {
   
   og_regmod <- lm(medv ~ ., data = Boston_scale)
   
-  # sink(paste0("disc_grad/example_scripts/regularized_linear_regression/sticky_log/log_nr", l, ".txt"))
+  sink(paste0("disc_grad/example_scripts/regularized_linear_regression/sticky_log_folder/log_nr", l, ".txt"))
   
   print("Start run")
   
@@ -67,7 +67,7 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
   prior_prob_zero <- 0.95
   prior_var_slab <- 1
   grhmc_model_list$weight_slab <- rep(1 - prior_prob_zero, (grhmc_model_list$n_parameters) - 1) # 95% prior probability of beta_i = 0
-  grhmc_model_list$sigma_slab <- rep(prior_prob_zero, grhmc_model_list$n_parameters - 1)
+  grhmc_model_list$sigma_slab <- rep(sqrt(prior_var_slab), grhmc_model_list$n_parameters - 1)
   
   grhmc_model_list$log_target_grad <- function(q) { # new version, vectorized and therefore slightly faster
     
@@ -91,9 +91,10 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
   qbar_initial <- c(og_regmod$coefficients[-1], sum((og_regmod$residuals)^2) / og_regmod$df.residual)
   pbar_initial <- rnorm(grhmc_model_list$n_parameters)
   
-  boston_scale_fit_grhmc <- grhmc_sticky_transformed_function(
+  print("warmup")
+  boston_scale_fit_grhmc_warmup <- grhmc_sticky_transformed_function(
     model_list = grhmc_model_list,
-    lambda = 0.2,
+    lambda = 2.5,
     T = time_period,
     n_samples = n_samples_per_iteration,
     diag_s_elements_initial = rep(1, grhmc_model_list$n_parameters),
@@ -103,8 +104,35 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
     Lambda_initial = 0,
     u_initial = rexp(1),
     random_state = NULL,
-    rtol = NULL,
-    atol = NULL,
+    rtol = 1e-4,
+    atol = 1e-4,
+    h_max = 1.0,
+    last.root.offset.lin.root.finder = 1.0e-8,
+    last.root.offset.non.lin.root.finder = 1.0e-8,
+    precision_real_root_lin_root_finder = 1.0e-13,
+    num_subdiv_non_lin_root_finder = 8L,
+    verbose_at_refresh = T
+  ) 
+  
+  new_qbar_initial <- tail(boston_scale_fit_grhmc_warmup$q_original_samples, 1)
+  new_qbar_initial[new_qbar_initial == 0] <- rnorm(sum(new_qbar_initial == 0), 0, 0.01)
+  new_pbar_initial <- rnorm(grhmc_model_list$n_parameters)
+  
+  print("sampling")
+  boston_scale_fit_grhmc_sampling <- grhmc_sticky_transformed_function(
+    model_list = grhmc_model_list,
+    lambda = 2.5,
+    T = time_period,
+    n_samples = n_samples_per_iteration,
+    diag_s_elements_initial = rep(1, grhmc_model_list$n_parameters),
+    m_initial = rep(0, grhmc_model_list$n_parameters),
+    qbar_initial = new_qbar_initial,
+    pbar_initial = new_pbar_initial,
+    Lambda_initial = 0,
+    u_initial = rexp(1),
+    random_state = NULL,
+    rtol = 1e-4,
+    atol = 1e-4,
     h_max = 1.0,
     last.root.offset.lin.root.finder = 1.0e-8,
     last.root.offset.non.lin.root.finder = 1.0e-8,
@@ -117,34 +145,13 @@ samples_matrix <- foreach::foreach(l = 1:n_iterations, .combine = "rbind") %dopa
   
   sink()
   
-  boston_scale_fit_grhmc$q_original_samples
+  list(
+    q_original_samples = boston_scale_fit_grhmc_sampling$q_original_samples,
+    n_evals_ode = boston_scale_fit_grhmc_sampling$n_evals_ode
+  )
   
 }
 
-# saveRDS(samples_matrix, "disc_grad/example_scripts/regularized_linear_regression/samples_sticky_run_example.RDS")
-samples_matrix <- readRDS("disc_grad/example_scripts/regularized_linear_regression/samples_sticky_run_example.RDS")
-
-boston_scale_grhmc_beta_store_matrix <- samples_matrix[, 1:length_beta]
-
-boston_grhmc_original_scale_beta_matrix <- t(t(boston_scale_grhmc_beta_store_matrix) / apply(x, 2, sd)) * sd(y) # convert back to original scale
-
-boston_grhmc_ratio_samples_zero <- sapply(1:ncol(boston_grhmc_original_scale_beta_matrix), function(i) mean(boston_grhmc_original_scale_beta_matrix[, i] == 0)) # posterior probability of beta equal to zero
-
-boston_grhmc_original_scale_beta_cred_int <- matrix(nrow = ncol(boston_grhmc_original_scale_beta_matrix), ncol = 2)
-colnames(boston_grhmc_original_scale_beta_cred_int) <- c("lower", "upper")
-
-for (j in 1:ncol(boston_grhmc_original_scale_beta_matrix)) {
-  
-  boston_grhmc_original_scale_beta_cred_int[j, ] <- quantile(boston_grhmc_original_scale_beta_matrix[, j], probs = c(0.025, 0.975))
-  
-}
-
-final_boston_grhmc_original_scale_beta_cred_int <- data.frame(
-  boston_grhmc_original_scale_beta_cred_int, 
-  posterior_median = apply(boston_grhmc_original_scale_beta_matrix, 2, median),
-  variable = colnames(x),
-  prior_prob = 0.95,
-  ratio_samples_equal_zero = boston_grhmc_ratio_samples_zero
-)
+saveRDS(store_runs, "disc_grad/example_scripts/regularized_linear_regression/sticky_run_example_prob_0_95.RDS")
 
 parallel::stopCluster(init_cluster)

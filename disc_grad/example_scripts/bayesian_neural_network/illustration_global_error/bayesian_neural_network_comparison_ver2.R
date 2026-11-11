@@ -483,8 +483,8 @@ legend(
   "bottomright",
   legend = c(
     "Leapfrog",
-    "GRHMC nr.1",
-    "GRHMC nr.2",
+    "NRHMC nr.1",
+    "NRHMC nr.2",
     latex2exp::TeX("$\\propto h^3$")
   ),
   pch = c(1, 1, 3, NA),
@@ -501,8 +501,8 @@ legend(
   "bottomright",
   legend = c(
     "Leapfrog",
-    "GRHMC nr.1",
-    "GRHMC nr.2",
+    "NRHMC nr.1",
+    "NRHMC nr.2",
     latex2exp::TeX("$\\propto h^3$")
   ),
   pch = c(1, 1, 3, NA),
@@ -511,7 +511,7 @@ legend(
   col = c("black", "red", "blue", "green")
 )
 
-pdf("disc_grad/example_scripts/section_6/bayesian_neural_network/illustration_global_error/bayesian_neural_network_comparison_plot_ver2.pdf",
+pdf("disc_grad/example_scripts/bayesian_neural_network/illustration_global_error/bayesian_neural_network_comparison_plot_ver2.pdf",
     width = 11.7, height = 8.3)
 
 relevant_h_indices <- h_vec >= 2e-5
@@ -533,8 +533,8 @@ legend(
   "bottomright",
   legend = c(
     "Leapfrog",
-    "GRHMC without boundary handling",
-    "GRHMC with boundary handling",
+    "NRHMC without boundary handling",
+    "NRHMC with boundary handling",
     latex2exp::TeX("$\\propto h^3$")
   ),
   pch = c(1, 1, 3, NA),

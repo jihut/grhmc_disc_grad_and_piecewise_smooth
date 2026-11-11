@@ -7,6 +7,7 @@ library(dplyr)
 library(rstan)
 library(foreach)
 library(gridExtra)
+library(ggrastr)
 
 n_iterations <- 10
 n_samples_per_iteration <- 1000000
@@ -22,8 +23,8 @@ scale_x <- scale(x)
 scale_y <- scale(y)
 mean_y <- mean(y)
 
-disc_grad_runs <- readRDS("disc_grad/example_scripts/regularized_linear_regression/disc_grad_run_identity_with_n_evals_ode_run_example.RDS")
-sticky_runs <- readRDS("disc_grad/example_scripts/regularized_linear_regression/sticky_run_identity_with_n_evals_ode_run_example.RDS")
+disc_grad_runs <- readRDS("disc_grad/example_scripts/regularized_linear_regression/final_disc_grad_run_identity_cpp.RDS")
+sticky_runs <- readRDS("disc_grad/example_scripts/regularized_linear_regression/sticky_run_example_prob_0_95.RDS")
 
 # Discontinuous gradient setup
 

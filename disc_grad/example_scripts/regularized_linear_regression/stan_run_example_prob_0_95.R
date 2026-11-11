@@ -73,15 +73,15 @@ mu_rho_sols <- solve_for_mu_rho_given_p(prior_prob)
 mu <- mu_rho_sols$mu
 rho <- mu_rho_sols$rho
 
-stan_model_specification <- function(mu, rho) {
-  
-  stan_code <- sprintf("
+stan_code <- sprintf("
   
   data {
     int <lower=0> n;
     int <lower=0> p;
     vector[n] y;
     matrix[n, p] x;
+    real mu;
+    real<lower=0> rho;
   }
 
   parameters {
@@ -96,10 +96,6 @@ stan_model_specification <- function(mu, rho) {
   }
 
   model {
-    real mu;
-    real rho; 
-    mu = %f;
-    rho = %f;
     beta_plus ~ normal(mu, rho);
     beta_minus ~ normal(mu, rho);
     
@@ -107,16 +103,8 @@ stan_model_specification <- function(mu, rho) {
     
     y ~ normal(x * beta, sigma);
     
-  }",
-  mu,
-  rho
-  )
-  
-  stan_code
-  
-}
-
-stan_code <- stan_model_specification(mu, rho)
+  }"
+)
 
 stan_run <- rstan::stan(
   model_code = stan_code, 
@@ -124,16 +112,21 @@ stan_run <- rstan::stan(
     n = n_rows, 
     p = length_beta,
     y = as.numeric(scale_y),
-    x = scale_x
+    x = scale_x,
+    mu = mu, 
+    rho = rho
   ),
   chains = n_iterations, 
   iter = 2 * n_samples_per_iteration,
-  cores = n_cores / 2,
-  seed = 42 # currently 42, try 420
+  cores = n_cores,
+  control = list(
+    metric = "unit_e"
+  ),
+  seed = 42 # currently 42, try 420 with metric = "diag_e", then divergent transitions
 )
 
-# readRDS(stan_run, "disc_grad/example_scripts/regularized_linear_regression/stan_run_example.RDS")
-stan_run <- readRDS("disc_grad/example_scripts/regularized_linear_regression/stan_run_example.RDS")
+# saveRDS(stan_run, "disc_grad/example_scripts/regularized_linear_regression/stan_identity_run_example.RDS")
+stan_run <- readRDS("disc_grad/example_scripts/regularized_linear_regression/stan_identity_run_example.RDS")
 
 stan_samples <- rstan::extract(stan_run)
 
